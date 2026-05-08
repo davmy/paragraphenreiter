@@ -6,7 +6,6 @@
   <title>Paragraphenreiter – Deutsches Recht erklärt</title>
   <link rel="stylesheet" href="style.css"/>
   <link rel="icon" href="logo.png" type="image/png"/>
-  <!-- Markdown rendering -->
   <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 </head>
 <body>
@@ -15,65 +14,156 @@
   <img class="logo" src="logo.png" alt="Paragraphenreiter Logo"/>
   <div class="header-text">
     <h1>Paragraphenreiter</h1>
-    <p>KI-Rechtsauskunft · Gesetze aus <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a></p>
+    <p id="header-subtitle"></p>
   </div>
-  <span class="header-badge">⚖️ Powered by Claude</span>
+  <div class="lang-switcher">
+    <button class="lang-btn" data-lang="de" onclick="setLang('de')">DE</button>
+    <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" data-lang="vi" onclick="setLang('vi')">VI</button>
+  </div>
 </header>
 
 <div id="status-bar" class="hidden">
   <div class="spinner"></div>
-  <span id="status-text">Initialisiere…</span>
+  <span id="status-text"></span>
 </div>
 
-<div id="chat-container">
-  <!-- Intro message -->
-  <div class="message assistant">
-    <div class="intro-bubble">
-      <h2>§ Willkommen beim Paragraphenreiter!</h2>
-      <p>Ich beantworte Ihre Rechtsfragen auf Basis der aktuellen deutschen Gesetze von
-        <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a>
-        – mit direkten Links zu den relevanten Paragraphen.
-      </p>
-      <p style="margin-top:10px;font-size:0.82rem;color:#9fa8da">
-        ⚠️ Ich ersetze keine rechtliche Beratung. Bei wichtigen Angelegenheiten wenden Sie sich bitte an einen Rechtsanwalt.
-      </p>
-      <div class="suggestions">
-        <button class="suggestion-btn" onclick="useSuggestion(this)">Was ist eine GmbH und wie gründe ich eine?</button>
-        <button class="suggestion-btn" onclick="useSuggestion(this)">Wann darf mein Vermieter kündigen?</button>
-        <button class="suggestion-btn" onclick="useSuggestion(this)">Welche Kündigungsfristen gelten im Arbeitsrecht?</button>
-        <button class="suggestion-btn" onclick="useSuggestion(this)">Was ist Hausfriedensbruch?</button>
-        <button class="suggestion-btn" onclick="useSuggestion(this)">Wie funktioniert die gesetzliche Erbfolge?</button>
-      </div>
-    </div>
-  </div>
-</div>
+<div id="chat-container"></div>
 
 <div id="input-area">
   <div id="input-row">
     <textarea
       id="user-input"
       rows="1"
-      placeholder="Ihre Rechtsfrage eingeben… (Enter zum Senden)"
-      aria-label="Rechtsfrage eingeben"></textarea>
-    <button id="stop-btn" onclick="stopStreaming()" aria-label="Stopp" style="display:none">
+      aria-label="input"></textarea>
+    <button id="stop-btn" onclick="stopStreaming()" style="display:none">
       <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
         <rect x="4" y="4" width="16" height="16" rx="2"/>
       </svg>
     </button>
-    <button id="send-btn" onclick="sendMessage()" aria-label="Senden">
+    <button id="send-btn" onclick="sendMessage()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="22" y1="2" x2="11" y2="13"/>
         <polygon points="22 2 15 22 11 13 2 9 22 2"/>
       </svg>
     </button>
   </div>
-  <p class="disclaimer">
-    Quellen: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> ·
-    KI: Claude (Anthropic) · Keine Rechtsberatung
-  </p>
+  <p class="disclaimer" id="footer-disclaimer"></p>
 </div>
 
 <script>
+  // ── Translations ────────────────────────────────────────
+  const T = {
+    de: {
+      subtitle: 'KI-Rechtsauskunft · Gesetze aus <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a>',
+      welcomeTitle: '§ Willkommen beim Paragraphenreiter!',
+      welcomeBody: 'Ich beantworte Ihre Rechtsfragen auf Basis der aktuellen deutschen Gesetze von <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a> – mit direkten Links zu den relevanten Paragraphen.',
+      welcomeDisclaimer: '⚠️ Ich ersetze keine rechtliche Beratung. Bei wichtigen Angelegenheiten wenden Sie sich bitte an einen Rechtsanwalt.',
+      suggestions: [
+        'Was ist eine GmbH und wie gründe ich eine?',
+        'Wann darf mein Vermieter kündigen?',
+        'Welche Kündigungsfristen gelten im Arbeitsrecht?',
+        'Was ist Hausfriedensbruch?',
+        'Wie funktioniert die gesetzliche Erbfolge?',
+      ],
+      placeholder: 'Ihre Rechtsfrage eingeben… (Enter zum Senden)',
+      sourcesTitle: '📚 Quellen (gesetze-im-internet.de)',
+      footer: 'Quellen: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> · Keine Rechtsberatung',
+      statusSearching: 'Suche relevante Gesetze…',
+      errorConnection: 'Verbindungsfehler',
+      errorPrefix: 'Fehler',
+    },
+    en: {
+      subtitle: 'AI Legal Info · Laws from <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a>',
+      welcomeTitle: '§ Welcome to Paragraphenreiter!',
+      welcomeBody: 'I answer your legal questions based on current German law from <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a> – with direct links to the relevant paragraphs.',
+      welcomeDisclaimer: '⚠️ I am not a substitute for legal advice. For important matters, please consult a lawyer.',
+      suggestions: [
+        'What is a GmbH and how do I found one?',
+        'When can my landlord terminate my lease?',
+        'What notice periods apply in employment law?',
+        'What is trespassing (Hausfriedensbruch)?',
+        'How does statutory inheritance work in Germany?',
+      ],
+      placeholder: 'Enter your legal question… (Enter to send)',
+      sourcesTitle: '📚 Sources (gesetze-im-internet.de)',
+      footer: 'Sources: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> · No legal advice',
+      statusSearching: 'Searching relevant laws…',
+      errorConnection: 'Connection error',
+      errorPrefix: 'Error',
+    },
+    vi: {
+      subtitle: 'Tư vấn pháp lý AI · Luật từ <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a>',
+      welcomeTitle: '§ Chào mừng đến với Paragraphenreiter!',
+      welcomeBody: 'Tôi trả lời các câu hỏi pháp lý của bạn dựa trên luật Đức hiện hành từ <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a> – với liên kết trực tiếp đến các điều khoản liên quan.',
+      welcomeDisclaimer: '⚠️ Tôi không thay thế tư vấn pháp lý. Đối với các vấn đề quan trọng, vui lòng tham khảo ý kiến luật sư.',
+      suggestions: [
+        'GmbH là gì và cách thành lập?',
+        'Khi nào chủ nhà được phép chấm dứt hợp đồng thuê?',
+        'Thời hạn thông báo trong luật lao động là bao lâu?',
+        'Xâm phạm chỗ ở (Hausfriedensbruch) là gì?',
+        'Thừa kế theo pháp luật ở Đức hoạt động như thế nào?',
+      ],
+      placeholder: 'Nhập câu hỏi pháp lý của bạn… (Enter để gửi)',
+      sourcesTitle: '📚 Nguồn (gesetze-im-internet.de)',
+      footer: 'Nguồn: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> · Không thay thế tư vấn pháp lý',
+      statusSearching: 'Đang tìm kiếm luật liên quan…',
+      errorConnection: 'Lỗi kết nối',
+      errorPrefix: 'Lỗi',
+    },
+  };
+
+  // ── Language detection & switching ─────────────────────
+  function detectLang() {
+    const saved = localStorage.getItem('lang');
+    if (saved && T[saved]) return saved;
+    const browser = (navigator.language || 'de').split('-')[0].toLowerCase();
+    return T[browser] ? browser : 'de';
+  }
+
+  let currentLang = detectLang();
+
+  function t(key) { return T[currentLang][key]; }
+
+  function setLang(lang) {
+    if (!T[lang]) return;
+    currentLang = lang;
+    localStorage.setItem('lang', lang);
+    applyTranslations();
+  }
+
+  function applyTranslations() {
+    document.documentElement.lang = currentLang;
+    document.getElementById('header-subtitle').innerHTML = t('subtitle');
+    document.getElementById('user-input').placeholder = t('placeholder');
+    document.getElementById('footer-disclaimer').innerHTML = t('footer');
+
+    // Active button highlight
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    });
+
+    // Rebuild intro bubble
+    const container = document.getElementById('chat-container');
+    const existing = container.querySelector('.intro-wrapper');
+    if (existing) existing.remove();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message assistant intro-wrapper';
+    const bubble = document.createElement('div');
+    bubble.className = 'intro-bubble';
+    bubble.innerHTML = `
+      <h2>${t('welcomeTitle')}</h2>
+      <p>${t('welcomeBody')}</p>
+      <p style="margin-top:10px;font-size:0.82rem;color:#9fa8da">${t('welcomeDisclaimer')}</p>
+      <div class="suggestions">
+        ${t('suggestions').map(s => `<button class="suggestion-btn" onclick="useSuggestion(this)">${s}</button>`).join('')}
+      </div>`;
+    wrapper.appendChild(bubble);
+    container.insertBefore(wrapper, container.firstChild);
+  }
+
+  // ── Chat state ──────────────────────────────────────────
   const chatContainer = document.getElementById('chat-container');
   const userInput = document.getElementById('user-input');
   const sendBtn = document.getElementById('send-btn');
@@ -84,21 +174,8 @@
   let isStreaming = false;
   let activeReader = null;
 
-  function stopStreaming() {
-    if (activeReader) {
-      activeReader.cancel();
-      activeReader = null;
-    }
-    isStreaming = false;
-    sendBtn.disabled = false;
-    document.getElementById('stop-btn').style.display = 'none';
-    hideStatus();
-    // Remove cursor from last bubble
-    document.querySelectorAll('.cursor').forEach(c => c.remove());
-  }
-
+  // ── Marked setup ────────────────────────────────────────
   marked.setOptions({ breaks: true, gfm: true });
-
   const renderer = new marked.Renderer();
   const _link = renderer.link.bind(renderer);
   renderer.link = (href, title, text) => {
@@ -107,47 +184,36 @@
   };
   marked.use({ renderer });
 
-  // Auto-resize textarea
+  // ── UI helpers ──────────────────────────────────────────
+  function stopStreaming() {
+    if (activeReader) { activeReader.cancel(); activeReader = null; }
+    isStreaming = false;
+    sendBtn.disabled = false;
+    document.getElementById('stop-btn').style.display = 'none';
+    hideStatus();
+    document.querySelectorAll('.cursor').forEach(c => c.remove());
+  }
+
   userInput.addEventListener('input', () => {
     userInput.style.height = 'auto';
     userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
   });
-
   userInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 
-  function useSuggestion(btn) {
-    userInput.value = btn.textContent;
-    sendMessage();
-  }
-
-  function showStatus(text) {
-    statusText.textContent = text;
-    statusBar.classList.remove('hidden');
-  }
-
-  function hideStatus() {
-    statusBar.classList.add('hidden');
-  }
-
-  function scrollToBottom() {
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  }
+  function useSuggestion(btn) { userInput.value = btn.textContent; sendMessage(); }
+  function showStatus(text) { statusText.textContent = text; statusBar.classList.remove('hidden'); }
+  function hideStatus() { statusBar.classList.add('hidden'); }
+  function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
 
   function addMessage(role, content) {
     const div = document.createElement('div');
     div.className = `message ${role}`;
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    if (role === 'assistant') {
-      bubble.innerHTML = marked.parse(content);
-    } else {
-      bubble.textContent = content;
-    }
+    bubble.innerHTML = role === 'assistant' ? marked.parse(content) : '';
+    if (role !== 'assistant') bubble.textContent = content;
     div.appendChild(bubble);
     chatContainer.appendChild(div);
     scrollToBottom();
@@ -159,7 +225,6 @@
     div.className = 'message assistant';
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    // Cursor
     const cursor = document.createElement('span');
     cursor.className = 'cursor';
     bubble.appendChild(cursor);
@@ -173,7 +238,7 @@
     if (!sources || sources.length === 0) return;
     const card = document.createElement('div');
     card.className = 'sources-card';
-    card.innerHTML = '<h4>📚 Quellen (gesetze-im-internet.de)</h4>';
+    card.innerHTML = `<h4>${t('sourcesTitle')}</h4>`;
     for (const src of sources) {
       const item = document.createElement('div');
       item.className = 'source-item';
@@ -188,8 +253,6 @@
       item.appendChild(tag);
       item.appendChild(link);
       card.appendChild(item);
-
-      // Section links (up to 5)
       if (src.sections && src.sections.length > 0) {
         const subs = document.createElement('div');
         subs.style.cssText = 'padding-left:16px;margin-top:3px;display:flex;flex-wrap:wrap;gap:4px';
@@ -211,6 +274,7 @@
     scrollToBottom();
   }
 
+  // ── Send message ────────────────────────────────────────
   async function sendMessage() {
     const text = userInput.value.trim();
     if (!text || isStreaming) return;
@@ -221,16 +285,14 @@
     userInput.value = '';
     userInput.style.height = 'auto';
 
-    // Add user message
     addMessage('user', text);
     history.push({ role: 'user', content: text });
 
-    // Prepare assistant bubble
-    const { bubble, cursor, div: assistantDiv } = addAssistantStreamBubble();
+    const { bubble, div: assistantDiv } = addAssistantStreamBubble();
     let rawContent = '';
     let sources = null;
 
-    showStatus('Suche relevante Gesetze…');
+    showStatus(t('statusSearching'));
 
     try {
       const response = await fetch('/api/chat', {
@@ -238,7 +300,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          history: history.slice(0, -1),  // exclude current user msg (already in message field)
+          history: history.slice(0, -1),
+          language: currentLang,
         }),
       });
 
@@ -253,19 +316,16 @@
         const { value, done } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-
         const lines = buffer.split('\n');
-        buffer = lines.pop(); // keep incomplete line
+        buffer = lines.pop();
 
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
           const data = JSON.parse(line.slice(6));
-
           if (data.type === 'status') {
             showStatus(data.content);
           } else if (data.type === 'content') {
             rawContent += data.content;
-            // Re-render markdown, keep cursor at end
             bubble.innerHTML = marked.parse(rawContent);
             const c = document.createElement('span');
             c.className = 'cursor';
@@ -274,27 +334,23 @@
           } else if (data.type === 'sources') {
             sources = data.sources;
           } else if (data.type === 'error') {
-            rawContent += `\n\n❌ Fehler: ${data.content}`;
+            rawContent += `\n\n❌ ${t('errorPrefix')}: ${data.content}`;
             bubble.innerHTML = marked.parse(rawContent);
           } else if (data.type === 'done') {
-            // Remove cursor, finalize
             bubble.innerHTML = marked.parse(rawContent);
             hideStatus();
           }
         }
       }
     } catch (err) {
-      bubble.innerHTML = marked.parse(`❌ Verbindungsfehler: ${err.message}`);
+      bubble.innerHTML = marked.parse(`❌ ${t('errorConnection')}: ${err.message}`);
       hideStatus();
     }
 
-    // Remove cursor if still there
     const cur = bubble.querySelector('.cursor');
     if (cur) cur.remove();
 
-    // Add sources
     if (sources) addSourcesCard(sources, assistantDiv);
-
     history.push({ role: 'assistant', content: rawContent });
 
     isStreaming = false;
@@ -305,7 +361,8 @@
     scrollToBottom();
   }
 
-  // Focus input on load
+  // ── Init ────────────────────────────────────────────────
+  applyTranslations();
   userInput.focus();
 </script>
 </body>

@@ -63,16 +63,27 @@ header img.logo {
   margin-top: 2px;
 }
 
-.header-badge {
+.lang-switcher {
   margin-left: auto;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,215,0,0.35);
-  color: var(--gold);
-  font-size: 0.72rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  white-space: nowrap;
+  display: flex;
+  gap: 4px;
 }
+
+.lang-btn {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.6);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.lang-btn:hover { background: rgba(255,255,255,0.18); color: white; }
+.lang-btn.active { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.6); color: white; }
 
 /* ── Status bar ─────────────────────────────────────── */
 #status-bar {

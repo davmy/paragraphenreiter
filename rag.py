@@ -67,6 +67,7 @@ Keine weiteren Erklärungen."""
         self,
         question: str,
         history: list[dict],
+        language: str = "de",
     ) -> AsyncGenerator[str, None]:
         def sse(event_type: str, data: dict) -> str:
             return f"data: {json.dumps({'type': event_type, **data}, ensure_ascii=False)}\n\n"
@@ -133,12 +134,18 @@ Keine weiteren Erklärungen."""
         for h in history[-6:]:  # Last 3 turns
             messages.append({"role": h["role"], "content": h["content"]})
 
+        lang_instruction = {
+            "en": "Answer in English.",
+            "vi": "Trả lời bằng tiếng Việt.",
+            "de": "Antworte auf Deutsch.",
+        }.get(language, "Antworte auf Deutsch.")
+
         user_message = f"""Rechtsfrage: {question}
 
 Relevante Gesetze aus gesetze-im-internet.de:
 {law_context}
 
-Bitte beantworte die Frage mit konkreten Paragraphen-Verweisen und Links zu gesetze-im-internet.de."""
+Bitte beantworte die Frage mit konkreten Paragraphen-Verweisen und Links zu gesetze-im-internet.de. {lang_instruction}"""
         messages.append({"role": "user", "content": user_message})
 
         # Step 5: Stream the answer

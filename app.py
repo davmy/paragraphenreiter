@@ -35,6 +35,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[ChatMessage] = []
+    language: str = "de"
 
 
 @app.post("/api/chat")
@@ -43,7 +44,7 @@ async def chat(request: ChatRequest):
 
     async def event_generator():
         try:
-            async for chunk in rag.stream_answer(request.message, history):
+            async for chunk in rag.stream_answer(request.message, history, request.language):
                 yield chunk
         except Exception as e:
             import json
