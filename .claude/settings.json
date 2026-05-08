@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.prompt // \"\"' | { read -r msg; [ -z \"$(git status --porcelain 2>/dev/null)\" ] && exit 0; git add -A && git commit -m \"${msg:-auto-commit}\" 2>/dev/null || true; }",
+            "statusMessage": "Committing changes…"
+          }
+        ]
+      }
+    ]
+  }
+}
