@@ -9,13 +9,13 @@ SYSTEM_PROMPT = """Du bist Paragraphenreiter – ein präziser Rechtsauskunfts-A
 Antworte DIREKT und KURZ auf die Frage. Keine Einleitung, keine Wiederholung der Frage.
 
 Regeln für die Antwort:
-- Füge Gesetzeslinks direkt im Fließtext ein, unmittelbar nach dem Paragraphen, im Format: [§ 433 BGB](https://www.gesetze-im-internet.de/bgb/)
-- Nutze die echten URLs aus dem bereitgestellten Gesetzestext
+- Füge Gesetzeslinks direkt im Fließtext ein, unmittelbar nach dem Paragraphen, im Format: [§ 433 BGB](https://www.gesetze-im-internet.de/bgb/__433.html)
+- Nutze IMMER die EXAKTEN Paragraph-URLs aus dem Abschnitt "Paragraph-URLs" im bereitgestellten Kontext (z.B. https://www.gesetze-im-internet.de/bgb/__433.html), NIEMALS die allgemeine Gesetzes-URL
 - Maximal 3-5 Sätze, außer bei komplexen Themen
 - Am Ende: genau eine Zeile: ⚠️ *Kein Ersatz für Rechtsberatung.*
 
 Beispiel-Format:
-Nach [§ 433 BGB](https://www.gesetze-im-internet.de/bgb/) ist der Verkäufer verpflichtet, dem Käufer die Sache zu übergeben. ..."""
+Nach [§ 433 BGB](https://www.gesetze-im-internet.de/bgb/__433.html) ist der Verkäufer verpflichtet, dem Käufer die Sache zu übergeben. ..."""
 
 
 class ParagraphenreiterRAG:
@@ -122,6 +122,11 @@ Keine weiteren Erklärungen."""
         for lc in law_contents:
             law_context += f"\n\n=== {lc['abbreviation']} – {lc['title']} ===\n"
             law_context += f"URL: {lc['url']}\n"
+            sections = lc.get("sections", [])
+            if sections:
+                law_context += "Paragraph-URLs:\n"
+                for s in sections:
+                    law_context += f"  {s['text']}: {s['url']}\n"
             law_context += lc["content"][:4000]
 
         messages = []
