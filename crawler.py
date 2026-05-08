@@ -3,6 +3,7 @@ import json
 import time
 import re
 from pathlib import Path
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 
 CACHE_DIR = Path("cache")
@@ -140,7 +141,7 @@ def fetch_law_content(abbreviation: str, url: str) -> dict:
             text = a.get_text(strip=True)
             href = a["href"]
             if text and ("§" in text or "__" in href):
-                full_url = href if href.startswith("http") else f"{BASE_URL}{href}"
+                full_url = href if href.startswith("http") else urljoin(url, href)
                 sections.append({"text": text, "url": full_url})
 
         # Extract readable law text (first ~8000 chars to stay within limits)
