@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Paragraphenreiter – Deutsches Recht erklärt</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="icon" href="logo.svg" type="image/svg+xml"/>
+  <!-- Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="logo.svg" alt="Paragraphenreiter Logo"/>
+  <div class="header-text">
+    <h1>Paragraphenreiter</h1>
+    <p>KI-Rechtsauskunft · Gesetze aus <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a></p>
+  </div>
+  <span class="header-badge">⚖️ Powered by Claude</span>
+</header>
+
+<div id="status-bar" class="hidden">
+  <div class="spinner"></div>
+  <span id="status-text">Initialisiere…</span>
+</div>
+
+<div id="chat-container">
+  <!-- Intro message -->
+  <div class="message assistant">
+    <div class="intro-bubble">
+      <h2>§ Willkommen beim Paragraphenreiter!</h2>
+      <p>Ich beantworte Ihre Rechtsfragen auf Basis der aktuellen deutschen Gesetze von
+        <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a>
+        – mit direkten Links zu den relevanten Paragraphen.
+      </p>
+      <p style="margin-top:10px;font-size:0.82rem;color:#9fa8da">
+        ⚠️ Ich ersetze keine rechtliche Beratung. Bei wichtigen Angelegenheiten wenden Sie sich bitte an einen Rechtsanwalt.
+      </p>
+      <div class="suggestions">
+        <button class="suggestion-btn" onclick="useSuggestion(this)">Was ist eine GmbH und wie gründe ich eine?</button>
+        <button class="suggestion-btn" onclick="useSuggestion(this)">Wann darf mein Vermieter kündigen?</button>
+        <button class="suggestion-btn" onclick="useSuggestion(this)">Welche Kündigungsfristen gelten im Arbeitsrecht?</button>
+        <button class="suggestion-btn" onclick="useSuggestion(this)">Was ist Hausfriedensbruch?</button>
+        <button class="suggestion-btn" onclick="useSuggestion(this)">Wie funktioniert die gesetzliche Erbfolge?</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="input-area">
+  <div id="input-row">
+    <textarea
+      id="user-input"
+      rows="1"
+      placeholder="Ihre Rechtsfrage eingeben… (Enter zum Senden)"
+      aria-label="Rechtsfrage eingeben"></textarea>
+    <button id="stop-btn" onclick="stopStreaming()" aria-label="Stopp" style="display:none">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+        <rect x="4" y="4" width="16" height="16" rx="2"/>
+      </svg>
+    </button>
+    <button id="send-btn" onclick="sendMessage()" aria-label="Senden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+  <p class="disclaimer">
+    Quellen: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> ·
+    KI: Claude (Anthropic) · Keine Rechtsberatung
+  </p>
+</div>
+
+<script>
+  const chatContainer = document.getElementById('chat-container');
+  const userInput = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const statusBar = document.getElementById('status-bar');
+  const statusText = document.getElementById('status-text');
+
+  let history = [];
+  let isStreaming = false;
+  let activeReader = null;
+
+  function stopStreaming() {
+    if (activeReader) {
+      activeReader.cancel();
+      activeReader = null;
+    }
+    isStreaming = false;
+    sendBtn.disabled = false;
+    document.getElementById('stop-btn').style.display = 'none';
+    hideStatus();
+    // Remove cursor from last bubble
+    document.querySelectorAll('.cursor').forEach(c => c.remove());
+  }
+
+  marked.setOptions({ breaks: true, gfm: true });
+
+  // Auto-resize textarea
+  userInput.addEventListener('input', () => {
+    userInput.style.height = 'auto';
+    userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
+  });
+
+  userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function useSuggestion(btn) {
+    userInput.value = btn.textContent;
+    sendMessage();
+  }
+
+  function showStatus(text) {
+    statusText.textContent = text;
+    statusBar.classList.remove('hidden');
+  }
+
+  function hideStatus() {
+    statusBar.classList.add('hidden');
+  }
+
+  function scrollToBottom() {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function addMessage(role, content) {
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    if (role === 'assistant') {
+      bubble.innerHTML = marked.parse(content);
+    } else {
+      bubble.textContent = content;
+    }
+    div.appendChild(bubble);
+    chatContainer.appendChild(div);
+    scrollToBottom();
+    return bubble;
+  }
+
+  function addAssistantStreamBubble() {
+    const div = document.createElement('div');
+    div.className = 'message assistant';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    // Cursor
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    bubble.appendChild(cursor);
+    div.appendChild(bubble);
+    chatContainer.appendChild(div);
+    scrollToBottom();
+    return { bubble, cursor, div };
+  }
+
+  function addSourcesCard(sources, parentDiv) {
+    if (!sources || sources.length === 0) return;
+    const card = document.createElement('div');
+    card.className = 'sources-card';
+    card.innerHTML = '<h4>📚 Quellen (gesetze-im-internet.de)</h4>';
+    for (const src of sources) {
+      const item = document.createElement('div');
+      item.className = 'source-item';
+      const tag = document.createElement('span');
+      tag.className = 'source-tag';
+      tag.textContent = src.abbreviation;
+      const link = document.createElement('a');
+      link.href = src.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = src.title || src.url;
+      item.appendChild(tag);
+      item.appendChild(link);
+      card.appendChild(item);
+
+      // Section links (up to 5)
+      if (src.sections && src.sections.length > 0) {
+        const subs = document.createElement('div');
+        subs.style.cssText = 'padding-left:16px;margin-top:3px;display:flex;flex-wrap:wrap;gap:4px';
+        src.sections.slice(0, 6).forEach(sec => {
+          const a = document.createElement('a');
+          a.href = sec.url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = sec.text;
+          a.style.cssText = 'font-size:0.75rem;color:#3949ab;background:#e8eaf6;padding:1px 6px;border-radius:10px;text-decoration:none';
+          a.onmouseover = () => a.style.textDecoration = 'underline';
+          a.onmouseout = () => a.style.textDecoration = 'none';
+          subs.appendChild(a);
+        });
+        card.appendChild(subs);
+      }
+    }
+    parentDiv.appendChild(card);
+    scrollToBottom();
+  }
+
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text || isStreaming) return;
+
+    isStreaming = true;
+    sendBtn.disabled = true;
+    document.getElementById('stop-btn').style.display = 'flex';
+    userInput.value = '';
+    userInput.style.height = 'auto';
+
+    // Add user message
+    addMessage('user', text);
+    history.push({ role: 'user', content: text });
+
+    // Prepare assistant bubble
+    const { bubble, cursor, div: assistantDiv } = addAssistantStreamBubble();
+    let rawContent = '';
+    let sources = null;
+
+    showStatus('Suche relevante Gesetze…');
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: history.slice(0, -1),  // exclude current user msg (already in message field)
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const reader = response.body.getReader();
+      activeReader = reader;
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete line
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = JSON.parse(line.slice(6));
+
+          if (data.type === 'status') {
+            showStatus(data.content);
+          } else if (data.type === 'content') {
+            rawContent += data.content;
+            // Re-render markdown, keep cursor at end
+            bubble.innerHTML = marked.parse(rawContent);
+            const c = document.createElement('span');
+            c.className = 'cursor';
+            bubble.appendChild(c);
+            scrollToBottom();
+          } else if (data.type === 'sources') {
+            sources = data.sources;
+          } else if (data.type === 'error') {
+            rawContent += `\n\n❌ Fehler: ${data.content}`;
+            bubble.innerHTML = marked.parse(rawContent);
+          } else if (data.type === 'done') {
+            // Remove cursor, finalize
+            bubble.innerHTML = marked.parse(rawContent);
+            hideStatus();
+          }
+        }
+      }
+    } catch (err) {
+      bubble.innerHTML = marked.parse(`❌ Verbindungsfehler: ${err.message}`);
+      hideStatus();
+    }
+
+    // Remove cursor if still there
+    const cur = bubble.querySelector('.cursor');
+    if (cur) cur.remove();
+
+    // Add sources
+    if (sources) addSourcesCard(sources, assistantDiv);
+
+    history.push({ role: 'assistant', content: rawContent });
+
+    isStreaming = false;
+    activeReader = null;
+    sendBtn.disabled = false;
+    document.getElementById('stop-btn').style.display = 'none';
+    userInput.focus();
+    scrollToBottom();
+  }
+
+  // Focus input on load
+  userInput.focus();
+</script>
+</body>
+</html>
