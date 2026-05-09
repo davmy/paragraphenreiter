@@ -16,11 +16,7 @@
     <h1>Paragraphenreiter</h1>
     <p id="header-subtitle"></p>
   </div>
-  <div class="lang-switcher">
-    <button class="lang-btn" data-lang="de" onclick="setLang('de')">DE</button>
-    <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-    <button class="lang-btn" data-lang="vi" onclick="setLang('vi')">VI</button>
-  </div>
+  <select id="lang-select" onchange="setLang(this.value)" aria-label="Language"></select>
 </header>
 
 <div id="status-bar" class="hidden">
@@ -32,10 +28,7 @@
 
 <div id="input-area">
   <div id="input-row">
-    <textarea
-      id="user-input"
-      rows="1"
-      aria-label="input"></textarea>
+    <textarea id="user-input" rows="1" aria-label="input"></textarea>
     <button id="stop-btn" onclick="stopStreaming()" style="display:none">
       <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
         <rect x="4" y="4" width="16" height="16" rx="2"/>
@@ -53,67 +46,169 @@
 
 <script>
   // ── Translations ────────────────────────────────────────
+  const LANGUAGES = [
+    { code: 'de', label: '🇩🇪 Deutsch' },
+    { code: 'en', label: '🇬🇧 English' },
+    { code: 'tr', label: '🇹🇷 Türkçe' },
+    { code: 'ar', label: '🇸🇦 العربية' },
+    { code: 'ru', label: '🇷🇺 Русский' },
+    { code: 'uk', label: '🇺🇦 Українська' },
+    { code: 'pl', label: '🇵🇱 Polski' },
+    { code: 'ro', label: '🇷🇴 Română' },
+    { code: 'fr', label: '🇫🇷 Français' },
+    { code: 'es', label: '🇪🇸 Español' },
+    { code: 'vi', label: '🇻🇳 Tiếng Việt' },
+  ];
+
+  const GII = 'https://www.gesetze-im-internet.de/aktuell.html';
+  const giiLink = (color) => `<a href="${GII}" target="_blank" style="color:${color}">gesetze-im-internet.de</a>`;
+
   const T = {
     de: {
-      subtitle: 'KI-Rechtsauskunft · Gesetze aus <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a>',
+      subtitle: `KI-Rechtsauskunft · Gesetze aus ${giiLink('#b3c0f7')}`,
       welcomeTitle: '§ Willkommen beim Paragraphenreiter!',
-      welcomeBody: 'Ich beantworte Ihre Rechtsfragen auf Basis der aktuellen deutschen Gesetze von <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a> – mit direkten Links zu den relevanten Paragraphen.',
+      welcomeBody: `Ich beantworte Ihre Rechtsfragen auf Basis der aktuellen deutschen Gesetze von ${giiLink('#90caf9')} – mit direkten Links zu den relevanten Paragraphen.`,
       welcomeDisclaimer: '⚠️ Ich ersetze keine rechtliche Beratung. Bei wichtigen Angelegenheiten wenden Sie sich bitte an einen Rechtsanwalt.',
-      suggestions: [
-        'Was ist eine GmbH und wie gründe ich eine?',
-        'Wann darf mein Vermieter kündigen?',
-        'Welche Kündigungsfristen gelten im Arbeitsrecht?',
-        'Was ist Hausfriedensbruch?',
-        'Wie funktioniert die gesetzliche Erbfolge?',
-      ],
+      suggestions: ['Was ist eine GmbH und wie gründe ich eine?', 'Wann darf mein Vermieter kündigen?', 'Welche Kündigungsfristen gelten im Arbeitsrecht?', 'Was ist Hausfriedensbruch?', 'Wie funktioniert die gesetzliche Erbfolge?'],
       placeholder: 'Ihre Rechtsfrage eingeben… (Enter zum Senden)',
       sourcesTitle: '📚 Quellen (gesetze-im-internet.de)',
-      footer: 'Quellen: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> · Keine Rechtsberatung',
+      footer: `Quellen: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Keine Rechtsberatung`,
       statusSearching: 'Suche relevante Gesetze…',
-      errorConnection: 'Verbindungsfehler',
-      errorPrefix: 'Fehler',
+      errorConnection: 'Verbindungsfehler', errorPrefix: 'Fehler',
     },
     en: {
-      subtitle: 'AI Legal Info · Laws from <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a>',
+      subtitle: `AI Legal Info · Laws from ${giiLink('#b3c0f7')}`,
       welcomeTitle: '§ Welcome to Paragraphenreiter!',
-      welcomeBody: 'I answer your legal questions based on current German law from <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a> – with direct links to the relevant paragraphs.',
+      welcomeBody: `I answer your legal questions based on current German law from ${giiLink('#90caf9')} – with direct links to the relevant paragraphs.`,
       welcomeDisclaimer: '⚠️ I am not a substitute for legal advice. For important matters, please consult a lawyer.',
-      suggestions: [
-        'What is a GmbH and how do I found one?',
-        'When can my landlord terminate my lease?',
-        'What notice periods apply in employment law?',
-        'What is trespassing (Hausfriedensbruch)?',
-        'How does statutory inheritance work in Germany?',
-      ],
+      suggestions: ['What is a GmbH and how do I found one?', 'When can my landlord terminate my lease?', 'What notice periods apply in employment law?', 'What is trespassing (Hausfriedensbruch)?', 'How does statutory inheritance work in Germany?'],
       placeholder: 'Enter your legal question… (Enter to send)',
       sourcesTitle: '📚 Sources (gesetze-im-internet.de)',
-      footer: 'Sources: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> · No legal advice',
+      footer: `Sources: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · No legal advice`,
       statusSearching: 'Searching relevant laws…',
-      errorConnection: 'Connection error',
-      errorPrefix: 'Error',
+      errorConnection: 'Connection error', errorPrefix: 'Error',
+    },
+    tr: {
+      subtitle: `Yapay Zeka Hukuk Bilgisi · ${giiLink('#b3c0f7')} kaynaklı yasalar`,
+      welcomeTitle: '§ Paragraphenreiter\'e Hoş Geldiniz!',
+      welcomeBody: `Hukuki sorularınızı ${giiLink('#90caf9')} adresindeki güncel Alman mevzuatına dayanarak – ilgili maddelere doğrudan bağlantılarla – yanıtlıyorum.`,
+      welcomeDisclaimer: '⚠️ Hukuki danışmanlığın yerini tutmam. Önemli konularda lütfen bir avukattan yardım alın.',
+      suggestions: ['GmbH nedir ve nasıl kurulur?', 'Ev sahibim kirayı ne zaman feshedebilir?', 'İş hukukunda ihbar süreleri nelerdir?', 'Konut dokunulmazlığını ihlal (Hausfriedensbruch) nedir?', 'Almanya\'da yasal miras nasıl işler?'],
+      placeholder: 'Hukuki sorunuzu girin… (Göndermek için Enter)',
+      sourcesTitle: '📚 Kaynaklar (gesetze-im-internet.de)',
+      footer: `Kaynaklar: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Hukuki danışmanlık değildir`,
+      statusSearching: 'İlgili yasalar aranıyor…',
+      errorConnection: 'Bağlantı hatası', errorPrefix: 'Hata',
+    },
+    ar: {
+      subtitle: `معلومات قانونية بالذكاء الاصطناعي · قوانين من ${giiLink('#b3c0f7')}`,
+      welcomeTitle: '§ مرحباً بك في Paragraphenreiter!',
+      welcomeBody: `أجيب على أسئلتك القانونية استناداً إلى القانون الألماني الحالي من ${giiLink('#90caf9')} – مع روابط مباشرة للمواد ذات الصلة.`,
+      welcomeDisclaimer: '⚠️ لا أغني عن الاستشارة القانونية. في الأمور المهمة، يُرجى استشارة محامٍ.',
+      suggestions: ['ما هي GmbH وكيف أؤسسها؟', 'متى يحق لمالك الشقة إنهاء عقد الإيجار؟', 'ما هي مواعيد الإشعار في قانون العمل؟', 'ما هو انتهاك حرمة المسكن (Hausfriedensbruch)؟', 'كيف يعمل الإرث القانوني في ألمانيا؟'],
+      placeholder: 'أدخل سؤالك القانوني… (Enter للإرسال)',
+      sourcesTitle: '📚 المصادر (gesetze-im-internet.de)',
+      footer: `المصادر: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · ليس استشارة قانونية`,
+      statusSearching: 'جارٍ البحث في القوانين ذات الصلة…',
+      errorConnection: 'خطأ في الاتصال', errorPrefix: 'خطأ',
+    },
+    ru: {
+      subtitle: `Правовая информация на основе ИИ · Законы из ${giiLink('#b3c0f7')}`,
+      welcomeTitle: '§ Добро пожаловать в Paragraphenreiter!',
+      welcomeBody: `Я отвечаю на ваши правовые вопросы на основе действующего немецкого законодательства с ${giiLink('#90caf9')} – с прямыми ссылками на соответствующие параграфы.`,
+      welcomeDisclaimer: '⚠️ Я не заменяю юридическую консультацию. По важным вопросам обращайтесь к адвокату.',
+      suggestions: ['Что такое GmbH и как её основать?', 'Когда арендодатель может расторгнуть договор?', 'Каковы сроки уведомления по трудовому праву?', 'Что такое нарушение неприкосновенности жилища (Hausfriedensbruch)?', 'Как работает законное наследование в Германии?'],
+      placeholder: 'Введите ваш правовой вопрос… (Enter для отправки)',
+      sourcesTitle: '📚 Источники (gesetze-im-internet.de)',
+      footer: `Источники: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Не является юридической консультацией`,
+      statusSearching: 'Поиск соответствующих законов…',
+      errorConnection: 'Ошибка подключения', errorPrefix: 'Ошибка',
+    },
+    uk: {
+      subtitle: `Правова інформація на основі ШІ · Закони з ${giiLink('#b3c0f7')}`,
+      welcomeTitle: '§ Ласкаво просимо до Paragraphenreiter!',
+      welcomeBody: `Я відповідаю на ваші правові запитання на основі чинного німецького законодавства з ${giiLink('#90caf9')} – з прямими посиланнями на відповідні параграфи.`,
+      welcomeDisclaimer: '⚠️ Я не замінюю юридичну консультацію. З важливих питань звертайтесь до адвоката.',
+      suggestions: ['Що таке GmbH і як її заснувати?', 'Коли орендодавець може розірвати договір?', 'Які строки повідомлення у трудовому праві?', 'Що таке порушення недоторканності житла (Hausfriedensbruch)?', 'Як працює законне спадкування в Німеччині?'],
+      placeholder: 'Введіть ваше правове запитання… (Enter для надсилання)',
+      sourcesTitle: '📚 Джерела (gesetze-im-internet.de)',
+      footer: `Джерела: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Не є юридичною консультацією`,
+      statusSearching: 'Пошук відповідних законів…',
+      errorConnection: 'Помилка підключення', errorPrefix: 'Помилка',
+    },
+    pl: {
+      subtitle: `Informacje prawne AI · Przepisy z ${giiLink('#b3c0f7')}`,
+      welcomeTitle: '§ Witamy w Paragraphenreiter!',
+      welcomeBody: `Odpowiadam na Twoje pytania prawne na podstawie aktualnego prawa niemieckiego z ${giiLink('#90caf9')} – z bezpośrednimi linkami do odpowiednich paragrafów.`,
+      welcomeDisclaimer: '⚠️ Nie zastępuję porady prawnej. W ważnych sprawach skonsultuj się z prawnikiem.',
+      suggestions: ['Czym jest GmbH i jak ją założyć?', 'Kiedy wynajmujący może wypowiedzieć umowę?', 'Jakie okresy wypowiedzenia obowiązują w prawie pracy?', 'Czym jest naruszenie miru domowego (Hausfriedensbruch)?', 'Jak działa dziedziczenie ustawowe w Niemczech?'],
+      placeholder: 'Wprowadź swoje pytanie prawne… (Enter, aby wysłać)',
+      sourcesTitle: '📚 Źródła (gesetze-im-internet.de)',
+      footer: `Źródła: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Nie jest poradą prawną`,
+      statusSearching: 'Wyszukiwanie odpowiednich przepisów…',
+      errorConnection: 'Błąd połączenia', errorPrefix: 'Błąd',
+    },
+    ro: {
+      subtitle: `Informații juridice AI · Legi de la ${giiLink('#b3c0f7')}`,
+      welcomeTitle: '§ Bun venit la Paragraphenreiter!',
+      welcomeBody: `Răspund la întrebările dumneavoastră juridice pe baza legislației germane actuale de la ${giiLink('#90caf9')} – cu linkuri directe către paragrafele relevante.`,
+      welcomeDisclaimer: '⚠️ Nu înlocuiesc consultanța juridică. Pentru probleme importante, consultați un avocat.',
+      suggestions: ['Ce este un GmbH și cum se înființează?', 'Când poate proprietarul să rezilieze contractul?', 'Ce termene de preaviz se aplică în dreptul muncii?', 'Ce este violarea domiciliului (Hausfriedensbruch)?', 'Cum funcționează moștenirea legală în Germania?'],
+      placeholder: 'Introduceți întrebarea juridică… (Enter pentru trimitere)',
+      sourcesTitle: '📚 Surse (gesetze-im-internet.de)',
+      footer: `Surse: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Nu este consultanță juridică`,
+      statusSearching: 'Căutare legi relevante…',
+      errorConnection: 'Eroare de conexiune', errorPrefix: 'Eroare',
+    },
+    fr: {
+      subtitle: `Informations juridiques IA · Lois depuis ${giiLink('#b3c0f7')}`,
+      welcomeTitle: '§ Bienvenue sur Paragraphenreiter !',
+      welcomeBody: `Je réponds à vos questions juridiques sur la base du droit allemand en vigueur depuis ${giiLink('#90caf9')} – avec des liens directs vers les paragraphes pertinents.`,
+      welcomeDisclaimer: '⚠️ Je ne remplace pas un conseil juridique. Pour les affaires importantes, consultez un avocat.',
+      suggestions: ["Qu'est-ce qu'une GmbH et comment en créer une ?", 'Quand mon propriétaire peut-il résilier le bail ?', "Quels préavis s'appliquent en droit du travail ?", "Qu'est-ce que la violation de domicile (Hausfriedensbruch) ?", "Comment fonctionne la succession légale en Allemagne ?"],
+      placeholder: 'Saisissez votre question juridique… (Entrée pour envoyer)',
+      sourcesTitle: '📚 Sources (gesetze-im-internet.de)',
+      footer: `Sources : <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Pas de conseil juridique`,
+      statusSearching: 'Recherche des lois pertinentes…',
+      errorConnection: 'Erreur de connexion', errorPrefix: 'Erreur',
+    },
+    es: {
+      subtitle: `Información jurídica IA · Leyes de ${giiLink('#b3c0f7')}`,
+      welcomeTitle: '§ ¡Bienvenido a Paragraphenreiter!',
+      welcomeBody: `Respondo sus preguntas jurídicas basándome en la legislación alemana vigente de ${giiLink('#90caf9')} – con enlaces directos a los párrafos relevantes.`,
+      welcomeDisclaimer: '⚠️ No sustituyo el asesoramiento jurídico. Para asuntos importantes, consulte a un abogado.',
+      suggestions: ['¿Qué es una GmbH y cómo se constituye?', '¿Cuándo puede mi arrendador rescindir el contrato?', '¿Qué plazos de preaviso rigen en el derecho laboral?', '¿Qué es la violación de domicilio (Hausfriedensbruch)?', '¿Cómo funciona la herencia legal en Alemania?'],
+      placeholder: 'Introduzca su pregunta jurídica… (Enter para enviar)',
+      sourcesTitle: '📚 Fuentes (gesetze-im-internet.de)',
+      footer: `Fuentes: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · No es asesoramiento jurídico`,
+      statusSearching: 'Buscando leyes relevantes…',
+      errorConnection: 'Error de conexión', errorPrefix: 'Error',
     },
     vi: {
-      subtitle: 'Tư vấn pháp lý AI · Luật từ <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#b3c0f7">gesetze-im-internet.de</a>',
+      subtitle: `Tư vấn pháp lý AI · Luật từ ${giiLink('#b3c0f7')}`,
       welcomeTitle: '§ Chào mừng đến với Paragraphenreiter!',
-      welcomeBody: 'Tôi trả lời các câu hỏi pháp lý của bạn dựa trên luật Đức hiện hành từ <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank" style="color:#90caf9">gesetze-im-internet.de</a> – với liên kết trực tiếp đến các điều khoản liên quan.',
+      welcomeBody: `Tôi trả lời các câu hỏi pháp lý của bạn dựa trên luật Đức hiện hành từ ${giiLink('#90caf9')} – với liên kết trực tiếp đến các điều khoản liên quan.`,
       welcomeDisclaimer: '⚠️ Tôi không thay thế tư vấn pháp lý. Đối với các vấn đề quan trọng, vui lòng tham khảo ý kiến luật sư.',
-      suggestions: [
-        'GmbH là gì và cách thành lập?',
-        'Khi nào chủ nhà được phép chấm dứt hợp đồng thuê?',
-        'Thời hạn thông báo trong luật lao động là bao lâu?',
-        'Xâm phạm chỗ ở (Hausfriedensbruch) là gì?',
-        'Thừa kế theo pháp luật ở Đức hoạt động như thế nào?',
-      ],
+      suggestions: ['GmbH là gì và cách thành lập?', 'Khi nào chủ nhà được phép chấm dứt hợp đồng thuê?', 'Thời hạn thông báo trong luật lao động là bao lâu?', 'Xâm phạm chỗ ở (Hausfriedensbruch) là gì?', 'Thừa kế theo pháp luật ở Đức hoạt động như thế nào?'],
       placeholder: 'Nhập câu hỏi pháp lý của bạn… (Enter để gửi)',
       sourcesTitle: '📚 Nguồn (gesetze-im-internet.de)',
-      footer: 'Nguồn: <a href="https://www.gesetze-im-internet.de/aktuell.html" target="_blank">gesetze-im-internet.de</a> · Không thay thế tư vấn pháp lý',
+      footer: `Nguồn: <a href="${GII}" target="_blank">gesetze-im-internet.de</a> · Không thay thế tư vấn pháp lý`,
       statusSearching: 'Đang tìm kiếm luật liên quan…',
-      errorConnection: 'Lỗi kết nối',
-      errorPrefix: 'Lỗi',
+      errorConnection: 'Lỗi kết nối', errorPrefix: 'Lỗi',
     },
   };
 
   // ── Language detection & switching ─────────────────────
+  const langSelect = document.getElementById('lang-select');
+
+  // Populate dropdown
+  LANGUAGES.forEach(({ code, label }) => {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = label;
+    langSelect.appendChild(opt);
+  });
+
   function detectLang() {
     const saved = localStorage.getItem('lang');
     if (saved && T[saved]) return saved;
@@ -134,14 +229,10 @@
 
   function applyTranslations() {
     document.documentElement.lang = currentLang;
+    langSelect.value = currentLang;
     document.getElementById('header-subtitle').innerHTML = t('subtitle');
     document.getElementById('user-input').placeholder = t('placeholder');
     document.getElementById('footer-disclaimer').innerHTML = t('footer');
-
-    // Active button highlight
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === currentLang);
-    });
 
     // Rebuild intro bubble
     const container = document.getElementById('chat-container');
@@ -179,8 +270,7 @@
   const renderer = new marked.Renderer();
   const _link = renderer.link.bind(renderer);
   renderer.link = (href, title, text) => {
-    const html = _link(href, title, text);
-    return html.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+    return _link(href, title, text).replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
   };
   marked.use({ renderer });
 
@@ -212,8 +302,8 @@
     div.className = `message ${role}`;
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.innerHTML = role === 'assistant' ? marked.parse(content) : '';
-    if (role !== 'assistant') bubble.textContent = content;
+    if (role === 'assistant') bubble.innerHTML = marked.parse(content);
+    else bubble.textContent = content;
     div.appendChild(bubble);
     chatContainer.appendChild(div);
     scrollToBottom();
@@ -231,7 +321,7 @@
     div.appendChild(bubble);
     chatContainer.appendChild(div);
     scrollToBottom();
-    return { bubble, cursor, div };
+    return { bubble, div };
   }
 
   function addSourcesCard(sources, parentDiv) {
@@ -298,11 +388,7 @@
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: history.slice(0, -1),
-          language: currentLang,
-        }),
+        body: JSON.stringify({ message: text, history: history.slice(0, -1), language: currentLang }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -318,7 +404,6 @@
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop();
-
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
           const data = JSON.parse(line.slice(6));
@@ -349,7 +434,6 @@
 
     const cur = bubble.querySelector('.cursor');
     if (cur) cur.remove();
-
     if (sources) addSourcesCard(sources, assistantDiv);
     history.push({ role: 'assistant', content: rawContent });
 

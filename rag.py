@@ -135,9 +135,17 @@ Keine weiteren Erklärungen."""
             messages.append({"role": h["role"], "content": h["content"]})
 
         lang_instruction = {
-            "en": "Answer in English.",
-            "vi": "Trả lời bằng tiếng Việt.",
             "de": "Antworte auf Deutsch.",
+            "en": "Answer in English.",
+            "tr": "Türkçe yanıtla.",
+            "ar": "أجب باللغة العربية.",
+            "ru": "Отвечай на русском языке.",
+            "uk": "Відповідай українською мовою.",
+            "pl": "Odpowiedz po polsku.",
+            "ro": "Răspunde în română.",
+            "fr": "Réponds en français.",
+            "es": "Responde en español.",
+            "vi": "Trả lời bằng tiếng Việt.",
         }.get(language, "Antworte auf Deutsch.")
 
         user_message = f"""Rechtsfrage: {question}
