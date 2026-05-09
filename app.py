@@ -60,6 +60,11 @@ async def chat(request: ChatRequest):
     )
 
 
+@app.get("/api/config")
+async def config():
+    return {"legal_notice_url": os.environ.get("LEGAL_NOTICE_URL") or None}
+
+
 @app.get("/api/index/status")
 async def index_status():
     return {

@@ -257,7 +257,8 @@
     langSelect.value = currentLang;
     document.getElementById('header-subtitle').innerHTML = t('subtitle');
     document.getElementById('user-input').placeholder = t('placeholder');
-    document.getElementById('footer-disclaimer').innerHTML = t('footer');
+    const legalLink = legalNoticeUrl ? ` · <a href="${legalNoticeUrl}" target="_blank" rel="noopener noreferrer">Impressum</a>` : '';
+    document.getElementById('footer-disclaimer').innerHTML = t('footer') + legalLink;
 
     // Rebuild intro bubble
     const container = document.getElementById('chat-container');
@@ -430,8 +431,13 @@
   }
 
   // ── Init ────────────────────────────────────────────────
-  applyTranslations();
-  userInput.focus();
+  let legalNoticeUrl = null;
+
+  fetch('/api/config')
+    .then(r => r.json())
+    .then(cfg => { legalNoticeUrl = cfg.legal_notice_url || null; })
+    .catch(() => {})
+    .finally(() => { applyTranslations(); userInput.focus(); });
 </script>
 </body>
 </html>
