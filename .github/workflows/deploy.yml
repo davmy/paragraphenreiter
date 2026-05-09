@@ -10,5 +10,3 @@
       source .venv/bin/activate
       pip install -r requirements.txt
       supervisorctl restart paragraphenreiter
-  env:
-    MY_API_KEY: ${{ secrets.MY_API_KEY }}
