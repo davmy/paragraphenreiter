@@ -1,12 +1,23 @@
-- name: Deploy via SSH
-  uses: appleboy/ssh-action@v1.0.3
-  with:
-    host: ${{ secrets.UBERSPACE_HOST }}
-    username: ${{ secrets.UBERSPACE_USER }}
-    key: ${{ secrets.UBERSPACE_SSH_KEY }}
-    script: |    
-      cd ~/var/lib/paragraphenreiter
-      git pull origin main
-      source .venv/bin/activate
-      pip install -r requirements.txt
-      supervisorctl restart paragraphenreiter
+name: Deploy to Uberspace
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.UBERSPACE_HOST }}
+          username: ${{ secrets.UBERSPACE_USER }}
+          key: ${{ secrets.UBERSPACE_SSH_KEY }}
+          script: |
+            cd ~/var/lib/paragraphenreiter
+            git pull origin main
+            source .venv/bin/activate
+            pip install -r requirements.txt
+            supervisorctl restart paragraphenreiter
