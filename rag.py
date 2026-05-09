@@ -146,6 +146,7 @@ Keine weiteren Erklärungen."""
             "fr": "Réponds en français.",
             "es": "Responde en español.",
             "vi": "Trả lời bằng tiếng Việt.",
+            "zh": "请用中文回答。",
         }.get(language, "Antworte auf Deutsch.")
 
         user_message = f"""Rechtsfrage: {question}
