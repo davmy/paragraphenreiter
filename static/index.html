@@ -337,46 +337,6 @@
     return { bubble, div };
   }
 
-  function addSourcesCard(sources, parentDiv) {
-    if (!sources || sources.length === 0) return;
-    const card = document.createElement('div');
-    card.className = 'sources-card';
-    card.innerHTML = `<h4>${t('sourcesTitle')}</h4>`;
-    for (const src of sources) {
-      const item = document.createElement('div');
-      item.className = 'source-item';
-      const tag = document.createElement('span');
-      tag.className = 'source-tag';
-      tag.textContent = src.abbreviation;
-      const link = document.createElement('a');
-      link.href = src.url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = src.title || src.url;
-      item.appendChild(tag);
-      item.appendChild(link);
-      card.appendChild(item);
-      if (src.sections && src.sections.length > 0) {
-        const subs = document.createElement('div');
-        subs.style.cssText = 'padding-left:16px;margin-top:3px;display:flex;flex-wrap:wrap;gap:4px';
-        src.sections.slice(0, 6).forEach(sec => {
-          const a = document.createElement('a');
-          a.href = sec.url;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          a.textContent = sec.text;
-          a.style.cssText = 'font-size:0.75rem;color:#3949ab;background:#e8eaf6;padding:1px 6px;border-radius:10px;text-decoration:none';
-          a.onmouseover = () => a.style.textDecoration = 'underline';
-          a.onmouseout = () => a.style.textDecoration = 'none';
-          subs.appendChild(a);
-        });
-        card.appendChild(subs);
-      }
-    }
-    parentDiv.appendChild(card);
-    scrollToBottom();
-  }
-
   // ── Send message ────────────────────────────────────────
   async function sendMessage() {
     const text = userInput.value.trim();
@@ -393,7 +353,6 @@
 
     const { bubble, div: assistantDiv } = addAssistantStreamBubble();
     let rawContent = '';
-    let sources = null;
 
     showStatus(t('statusSearching'));
 
@@ -429,8 +388,6 @@
             c.className = 'cursor';
             bubble.appendChild(c);
             scrollToBottom();
-          } else if (data.type === 'sources') {
-            sources = data.sources;
           } else if (data.type === 'error') {
             rawContent += `\n\n❌ ${t('errorPrefix')}: ${data.content}`;
             bubble.innerHTML = marked.parse(rawContent);
@@ -447,7 +404,6 @@
 
     const cur = bubble.querySelector('.cursor');
     if (cur) cur.remove();
-    if (sources) addSourcesCard(sources, assistantDiv);
     history.push({ role: 'assistant', content: rawContent });
 
     isStreaming = false;
