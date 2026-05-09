@@ -12,7 +12,6 @@ Regeln für die Antwort:
 - Füge Gesetzeslinks direkt im Fließtext ein, unmittelbar nach dem Paragraphen, im Format: [§ 433 BGB](https://www.gesetze-im-internet.de/bgb/__433.html)
 - Nutze IMMER die EXAKTEN Paragraph-URLs aus dem Abschnitt "Paragraph-URLs" im bereitgestellten Kontext (z.B. https://www.gesetze-im-internet.de/bgb/__433.html), NIEMALS die allgemeine Gesetzes-URL
 - Maximal 3-5 Sätze, außer bei komplexen Themen
-- Am Ende: genau eine Zeile: ⚠️ *Kein Ersatz für Rechtsberatung.*
 
 Beispiel-Format:
 Nach [§ 433 BGB](https://www.gesetze-im-internet.de/bgb/__433.html) ist der Verkäufer verpflichtet, dem Käufer die Sache zu übergeben. ..."""
