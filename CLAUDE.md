@@ -20,7 +20,11 @@ uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 **Environment:** Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`. The optional `LEGAL_NOTICE_URL` adds an imprint link to the UI.
 
-There are no automated tests or a lint command configured.
+**Run tests:**
+```bash
+pip install -r requirements-dev.txt
+pytest tests/ -v
+```
 
 ## Architecture
 
