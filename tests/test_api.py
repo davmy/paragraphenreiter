@@ -31,6 +31,18 @@ def test_index_status_ready(client):
     assert data["law_count"] == 5  # SAMPLE_INDEX in conftest has 5 entries
 
 
+def test_chat_rate_limit(client):
+    import app as app_module
+
+    payload = {"message": "Frage", "language": "de"}
+    for _ in range(10):
+        client.post("/api/chat", json=payload)
+    response = client.post("/api/chat", json=payload)
+    assert response.status_code == 429
+    # Reset so subsequent tests are not blocked
+    app_module.limiter._storage.reset()
+
+
 def test_chat_rejects_empty_message(client):
     response = client.post("/api/chat", json={"message": "", "language": "de"})
     assert response.status_code == 422

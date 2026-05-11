@@ -1,10 +1,13 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from rag import ParagraphenreiterRAG
 
 load_dotenv()
@@ -16,6 +19,7 @@ if not os.environ.get("ANTHROPIC_API_KEY"):
     )
 
 rag = ParagraphenreiterRAG()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @asynccontextmanager
@@ -25,6 +29,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Paragraphenreiter", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(
+    RateLimitExceeded,
+    lambda request, exc: JSONResponse(
+        {"detail": "Too many requests. Please wait before sending another message."},
+        status_code=429,
+    ),
+)
 
 
 class ChatMessage(BaseModel):
@@ -41,14 +53,13 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/api/chat")
-async def chat(request: ChatRequest):
-    history = [{"role": m.role, "content": m.content} for m in request.history]
+@limiter.limit("10/minute")
+async def chat(request: Request, body: ChatRequest):
+    history = [{"role": m.role, "content": m.content} for m in body.history]
 
     async def event_generator():
         try:
-            async for chunk in rag.stream_answer(
-                request.message, history, request.language
-            ):
+            async for chunk in rag.stream_answer(body.message, history, body.language):
                 yield chunk
         except Exception as e:
             import json
