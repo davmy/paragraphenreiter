@@ -194,7 +194,7 @@ def fetch_law_content(abbreviation: str, url: str) -> dict:
             "abbreviation": abbreviation,
             "title": title,
             "url": url,
-            "sections": sections[:80],
+            "sections": sections,
             "content": content[:8000],
         }
 
