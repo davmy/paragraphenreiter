@@ -8,7 +8,12 @@ from dotenv import load_dotenv
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import structlog
+from logging_config import configure_logging
 from rag import ParagraphenreiterRAG
+
+configure_logging()
+logger = structlog.get_logger()
 
 load_dotenv()
 
@@ -25,7 +30,9 @@ limiter = Limiter(key_func=get_remote_address)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await rag.initialize()
+    logger.info("startup_complete", law_count=len(rag.law_index))
     yield
+    logger.info("shutdown")
 
 
 app = FastAPI(title="Paragraphenreiter", lifespan=lifespan)
@@ -55,15 +62,23 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 @limiter.limit("10/minute")
 async def chat(request: Request, body: ChatRequest):
+    log = logger.bind(
+        ip=request.client.host if request.client else "unknown",
+        language=body.language,
+        message_length=len(body.message),
+    )
+    log.info("chat_request")
     history = [{"role": m.role, "content": m.content} for m in body.history]
 
     async def event_generator():
         try:
             async for chunk in rag.stream_answer(body.message, history, body.language):
                 yield chunk
+            log.info("chat_complete")
         except Exception as e:
             import json
 
+            log.error("chat_error", error=str(e))
             yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
 
     return StreamingResponse(

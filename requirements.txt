@@ -6,3 +6,4 @@ beautifulsoup4==4.14.3
 lxml==6.1.0
 python-dotenv==1.2.2
 slowapi==0.1.9
+structlog==25.5.0

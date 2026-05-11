@@ -2,8 +2,11 @@ import json
 import asyncio
 from typing import AsyncGenerator, cast
 import anthropic
+import structlog
 from anthropic.types import MessageParam
 from crawler import fetch_law_index, fetch_law_content, search_index
+
+logger = structlog.get_logger()
 
 SYSTEM_PROMPT = """Du bist Paragraphenreiter – ein präziser Rechtsauskunfts-Assistent für deutsches Recht.
 
@@ -26,7 +29,7 @@ class ParagraphenreiterRAG:
     async def initialize(self):
         loop = asyncio.get_running_loop()
         self.law_index = await loop.run_in_executor(None, fetch_law_index)
-        print(f"[RAG] Gesetzesindex geladen: {len(self.law_index)} Gesetze")
+        logger.info("index_loaded", law_count=len(self.law_index))
 
     def _build_index_summary(self, candidates: list[dict]) -> str:
         lines = [f"- {law['abbreviation']}: {law['title']}" for law in candidates]

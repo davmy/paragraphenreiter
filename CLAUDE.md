@@ -28,14 +28,14 @@ pytest tests/ -v
 
 **Lint:**
 ```bash
-black --check app.py rag.py crawler.py tests/
-ruff check app.py rag.py crawler.py tests/
-mypy app.py rag.py crawler.py
+black --check app.py rag.py crawler.py logging_config.py tests/
+ruff check app.py rag.py crawler.py logging_config.py tests/
+mypy app.py rag.py crawler.py logging_config.py
 ```
 
 **Auto-format:**
 ```bash
-black app.py rag.py crawler.py tests/
+black app.py rag.py crawler.py logging_config.py tests/
 ```
 
 ## Architecture

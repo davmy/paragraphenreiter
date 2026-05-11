@@ -27,13 +27,13 @@ jobs:
         run: pip-audit -r requirements.txt
 
       - name: Black check
-        run: black --check app.py rag.py crawler.py tests/
+        run: black --check app.py rag.py crawler.py logging_config.py tests/
 
       - name: Ruff check
-        run: ruff check app.py rag.py crawler.py tests/
+        run: ruff check app.py rag.py crawler.py logging_config.py tests/
 
       - name: Type check
-        run: mypy app.py rag.py crawler.py
+        run: mypy app.py rag.py crawler.py logging_config.py
 
       - name: Tests
         run: pytest tests/ -v
