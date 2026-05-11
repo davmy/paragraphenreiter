@@ -54,3 +54,4 @@ JSON files are written to `cache/` (gitignored). The index is refreshed via `POS
 - Create commits after completing each logical unit of work.
 - Do not push to the remote repository unless asked.
 - Use conventional commit messages (e.g. "feat:", "fix:", "refactor:").
+- Ommit the hint Co-Authored-By: ...
