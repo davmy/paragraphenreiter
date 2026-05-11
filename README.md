@@ -23,14 +23,6 @@ An AI-powered legal chatbot that answers questions about German law with direct 
 
 The law index is refreshed automatically on startup if older than 24 hours.
 
-## Stack
-
-- **Backend:** FastAPI + uvicorn (Python 3.12)
-- **AI:** Anthropic Claude Sonnet 4.6
-- **Data source:** [gesetze-im-internet.de](https://www.gesetze-im-internet.de) (scraped with httpx + BeautifulSoup)
-- **Frontend:** Vanilla JS single-page app, markdown via marked.js
-- **Hosting:** Uberspace (supervised via supervisord)
-
 ## Setup
 
 ```bash
