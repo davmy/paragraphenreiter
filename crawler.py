@@ -27,10 +27,9 @@ def fetch_law_index(force_refresh: bool = False) -> list[dict]:
     laws = []
     seen = set()
     # aktuell.html links to Teilliste_A.html … Teilliste_Z.html and Teilliste_1.html …
-    sublists = (
-        [f"Teilliste_{c}.html" for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
-        + [f"Teilliste_{n}.html" for n in range(10)]
-    )
+    sublists = [f"Teilliste_{c}.html" for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"] + [
+        f"Teilliste_{n}.html" for n in range(10)
+    ]
 
     with httpx.Client(headers=HEADERS, timeout=30, follow_redirects=True) as client:
         for sublist in sublists:
@@ -64,12 +63,14 @@ def fetch_law_index(force_refresh: bool = False) -> list[dict]:
                 # Build absolute URL: href is like ./bgb/index.html
                 clean_path = href.lstrip("./")
                 law_url = f"{BASE_URL}/{clean_path.split('/')[0]}/"
-                laws.append({
-                    "abbreviation": abbrev.strip(),
-                    "title": title.strip(),
-                    "url": law_url,
-                    "path": f"/{clean_path.split('/')[0]}/",
-                })
+                laws.append(
+                    {
+                        "abbreviation": abbrev.strip(),
+                        "title": title.strip(),
+                        "url": law_url,
+                        "path": f"/{clean_path.split('/')[0]}/",
+                    }
+                )
 
     with open(LAW_INDEX_FILE, "w", encoding="utf-8") as f:
         json.dump(laws, f, ensure_ascii=False, indent=2)
@@ -85,10 +86,44 @@ def search_index(query: str, law_index: list[dict], top_n: int = 30) -> list[dic
     mentioned_abbrevs = {m.upper() for m in abbrev_pattern.findall(query)}
 
     tokens = re.findall(r"\w+", query_lower)
-    stopwords = {"die", "der", "das", "und", "oder", "ich", "ein", "eine", "einen",
-                 "was", "wie", "wo", "wann", "warum", "ist", "sind", "hat", "haben",
-                 "kann", "darf", "muss", "soll", "in", "an", "auf", "bei", "von",
-                 "zu", "mit", "nach", "über", "für", "gegen", "um", "aus", "als"}
+    stopwords = {
+        "die",
+        "der",
+        "das",
+        "und",
+        "oder",
+        "ich",
+        "ein",
+        "eine",
+        "einen",
+        "was",
+        "wie",
+        "wo",
+        "wann",
+        "warum",
+        "ist",
+        "sind",
+        "hat",
+        "haben",
+        "kann",
+        "darf",
+        "muss",
+        "soll",
+        "in",
+        "an",
+        "auf",
+        "bei",
+        "von",
+        "zu",
+        "mit",
+        "nach",
+        "über",
+        "für",
+        "gegen",
+        "um",
+        "aus",
+        "als",
+    }
     tokens = [t for t in tokens if t not in stopwords and len(t) > 2]
 
     scored = []

@@ -26,6 +26,16 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
+**Lint (Black style check):**
+```bash
+black --check app.py rag.py crawler.py tests/
+```
+
+**Auto-format:**
+```bash
+black app.py rag.py crawler.py tests/
+```
+
 ## Architecture
 
 **Paragraphenreiter** is an AI-powered German legal chatbot that answers questions by retrieving relevant statutes from `gesetze-im-internet.de` and generating streaming responses using Claude Sonnet 4.6.

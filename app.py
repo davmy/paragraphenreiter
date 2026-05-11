@@ -44,10 +44,13 @@ async def chat(request: ChatRequest):
 
     async def event_generator():
         try:
-            async for chunk in rag.stream_answer(request.message, history, request.language):
+            async for chunk in rag.stream_answer(
+                request.message, history, request.language
+            ):
                 yield chunk
         except Exception as e:
             import json
+
             yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
 
     return StreamingResponse(
@@ -77,8 +80,11 @@ async def index_status():
 async def refresh_index():
     import asyncio
     from crawler import fetch_law_index
+
     loop = asyncio.get_event_loop()
-    rag.law_index = await loop.run_in_executor(None, lambda: fetch_law_index(force_refresh=True))
+    rag.law_index = await loop.run_in_executor(
+        None, lambda: fetch_law_index(force_refresh=True)
+    )
     return {"law_count": len(rag.law_index)}
 
 

@@ -31,7 +31,9 @@ class ParagraphenreiterRAG:
         lines = [f"- {l['abbreviation']}: {l['title']}" for l in candidates]
         return "\n".join(lines)
 
-    def _identify_relevant_laws(self, question: str, candidates: list[dict]) -> list[str]:
+    def _identify_relevant_laws(
+        self, question: str, candidates: list[dict]
+    ) -> list[str]:
         if not candidates:
             return []
 
@@ -54,6 +56,7 @@ Keine weiteren Erklärungen."""
         text = resp.content[0].text.strip()
         # Extract JSON list from response
         import re
+
         m = re.search(r"\[.*?\]", text, re.DOTALL)
         if m:
             try:
@@ -82,7 +85,12 @@ Keine weiteren Erklärungen."""
         if not candidates:
             candidates = self.law_index[:30]
 
-        yield sse("status", {"content": f"{len(candidates)} potenzielle Gesetze gefunden – identifiziere relevante…"})
+        yield sse(
+            "status",
+            {
+                "content": f"{len(candidates)} potenzielle Gesetze gefunden – identifiziere relevante…"
+            },
+        )
 
         # Step 2: Claude selects the best laws
         relevant_abbrevs = await loop.run_in_executor(
@@ -103,17 +111,21 @@ Keine weiteren Erklärungen."""
             law_meta = abbrev_map.get(abbrev.upper())
             if not law_meta:
                 continue
-            yield sse("status", {"content": f"Lade {abbrev} von gesetze-im-internet.de…"})
+            yield sse(
+                "status", {"content": f"Lade {abbrev} von gesetze-im-internet.de…"}
+            )
             content = await loop.run_in_executor(
                 None, fetch_law_content, abbrev, law_meta["url"]
             )
             law_contents.append(content)
-            sources.append({
-                "abbreviation": abbrev,
-                "title": content["title"],
-                "url": law_meta["url"],
-                "sections": content.get("sections", [])[:10],
-            })
+            sources.append(
+                {
+                    "abbreviation": abbrev,
+                    "title": content["title"],
+                    "url": law_meta["url"],
+                    "sections": content.get("sections", [])[:10],
+                }
+            )
 
         yield sse("status", {"content": "Generiere Antwort…"})
 

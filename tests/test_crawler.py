@@ -1,11 +1,36 @@
 from crawler import search_index
 
 INDEX = [
-    {"abbreviation": "BGB", "title": "Bürgerliches Gesetzbuch", "url": "https://www.gesetze-im-internet.de/bgb/", "path": "/bgb/"},
-    {"abbreviation": "StGB", "title": "Strafgesetzbuch", "url": "https://www.gesetze-im-internet.de/stgb/", "path": "/stgb/"},
-    {"abbreviation": "HGB", "title": "Handelsgesetzbuch", "url": "https://www.gesetze-im-internet.de/hgb/", "path": "/hgb/"},
-    {"abbreviation": "GG", "title": "Grundgesetz für die Bundesrepublik Deutschland", "url": "https://www.gesetze-im-internet.de/gg/", "path": "/gg/"},
-    {"abbreviation": "AO", "title": "Abgabenordnung", "url": "https://www.gesetze-im-internet.de/ao_1977/", "path": "/ao_1977/"},
+    {
+        "abbreviation": "BGB",
+        "title": "Bürgerliches Gesetzbuch",
+        "url": "https://www.gesetze-im-internet.de/bgb/",
+        "path": "/bgb/",
+    },
+    {
+        "abbreviation": "StGB",
+        "title": "Strafgesetzbuch",
+        "url": "https://www.gesetze-im-internet.de/stgb/",
+        "path": "/stgb/",
+    },
+    {
+        "abbreviation": "HGB",
+        "title": "Handelsgesetzbuch",
+        "url": "https://www.gesetze-im-internet.de/hgb/",
+        "path": "/hgb/",
+    },
+    {
+        "abbreviation": "GG",
+        "title": "Grundgesetz für die Bundesrepublik Deutschland",
+        "url": "https://www.gesetze-im-internet.de/gg/",
+        "path": "/gg/",
+    },
+    {
+        "abbreviation": "AO",
+        "title": "Abgabenordnung",
+        "url": "https://www.gesetze-im-internet.de/ao_1977/",
+        "path": "/ao_1977/",
+    },
 ]
 
 
@@ -39,7 +64,12 @@ def test_unrelated_query_returns_empty():
 
 def test_top_n_limits_results():
     large_index = [
-        {"abbreviation": f"LAW{i}", "title": f"Gesetz nummer {i}", "url": "", "path": ""}
+        {
+            "abbreviation": f"LAW{i}",
+            "title": f"Gesetz nummer {i}",
+            "url": "",
+            "path": "",
+        }
         for i in range(50)
     ]
     results = search_index("Gesetz nummer", large_index, top_n=5)
