@@ -19,20 +19,22 @@
   --accent-hover: #93c5fd;
 }
 
-[data-theme="dark"] {
-  --bg: #111827;
-  --surface: #1f2937;
-  --surface-alt: #374151;
-  --text: #f3f4f6;
-  --text-muted: #9ca3af;
-  --bubble-user: #1e3a6e;
-  --bubble-user-text: #ffffff;
-  --bubble-bot: #1f2937;
-  --bubble-bot-text: #f3f4f6;
-  --border: #374151;
-  --shadow: 0 2px 8px rgba(0,0,0,0.4);
-  --accent: #93c5fd;
-  --accent-hover: #bfdbfe;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --surface: #1f2937;
+    --surface-alt: #374151;
+    --text: #f3f4f6;
+    --text-muted: #9ca3af;
+    --bubble-user: #1e3a6e;
+    --bubble-user-text: #ffffff;
+    --bubble-bot: #1f2937;
+    --bubble-bot-text: #f3f4f6;
+    --border: #374151;
+    --shadow: 0 2px 8px rgba(0,0,0,0.4);
+    --accent: #93c5fd;
+    --accent-hover: #bfdbfe;
+  }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -82,6 +84,7 @@ header img.logo {
 }
 
 #lang-select {
+  margin-left: auto;
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.28);
   color: white;
@@ -363,39 +366,13 @@ header img.logo {
 }
 .disclaimer a { color: var(--accent); }
 
-/* ── Theme toggle button ─────────────────────────────── */
-#theme-btn {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.28);
-  color: white;
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background 0.2s;
-}
-#theme-btn:hover { background: rgba(255,255,255,0.20); }
-#theme-btn svg { width: 16px; height: 16px; }
-
-.header-controls {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 /* ── Dark mode: input & card overrides ───────────────── */
-[data-theme="dark"] #user-input {
-  background: var(--surface);
-  color: var(--text);
+@media (prefers-color-scheme: dark) {
+  #user-input { background: var(--surface); color: var(--text); }
+  #user-input:focus { border-color: #93c5fd; }
+  .sources-card { border-color: var(--border); }
+  #lang-select option { background: #1f2937; }
 }
-[data-theme="dark"] #user-input:focus { border-color: #93c5fd; }
-[data-theme="dark"] .sources-card { border-color: var(--border); }
-[data-theme="dark"] #lang-select option { background: #1f2937; }
 
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 600px) {
