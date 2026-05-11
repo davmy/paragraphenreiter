@@ -1,6 +1,8 @@
 import json
 from unittest.mock import patch
 
+from tests.conftest import SAMPLE_INDEX
+
 
 def test_health(client):
     response = client.get("/api/health")
@@ -21,6 +23,13 @@ def test_config_returns_url_when_set(client, monkeypatch):
     response = client.get("/api/config")
     assert response.status_code == 200
     assert response.json()["legal_notice_url"] == "https://example.com/impressum"
+
+
+def test_refresh_index(client):
+    with patch("crawler.fetch_law_index", return_value=SAMPLE_INDEX):
+        response = client.post("/api/index/refresh")
+    assert response.status_code == 200
+    assert response.json()["law_count"] == len(SAMPLE_INDEX)
 
 
 def test_index_status_ready(client):
