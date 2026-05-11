@@ -1,4 +1,5 @@
 import json
+import re
 import asyncio
 from typing import AsyncGenerator, cast
 import anthropic
@@ -35,6 +36,30 @@ class ParagraphenreiterRAG:
         lines = [f"- {law['abbreviation']}: {law['title']}" for law in candidates]
         return "\n".join(lines)
 
+    def _suggest_abbreviations_from_knowledge(self, question: str) -> list[str]:
+        """Ask Claude to suggest relevant law abbreviations from its training knowledge."""
+        prompt = f"""Welche deutschen Gesetze (Abkürzungen) sind am wahrscheinlichsten relevant für diese Rechtsfrage?
+
+Frage: {question}
+
+Antworte NUR mit einer JSON-Liste von bis zu 5 Abkürzungen, z.B.: ["BGB", "KSchG"]
+Keine weiteren Erklärungen."""
+
+        try:
+            resp = self.client.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=100,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            block = resp.content[0]
+            text = (block.text if hasattr(block, "text") else "").strip()
+            m = re.search(r"\[.*?\]", text, re.DOTALL)
+            if m:
+                return json.loads(m.group())
+        except Exception:
+            pass
+        return []
+
     def _identify_relevant_laws(
         self, question: str, candidates: list[dict]
     ) -> list[str]:
@@ -59,9 +84,6 @@ Keine weiteren Erklärungen."""
         )
         block = resp.content[0]
         text = (block.text if hasattr(block, "text") else "").strip()
-        # Extract JSON list from response
-        import re
-
         m = re.search(r"\[.*?\]", text, re.DOTALL)
         if m:
             try:
@@ -81,14 +103,34 @@ Keine weiteren Erklärungen."""
 
         yield sse("status", {"content": "Durchsuche Gesetzesindex…"})
 
-        # Step 1: keyword pre-filter
+        # Step 1: keyword pre-filter + Claude knowledge suggestion (parallel)
         loop = asyncio.get_running_loop()
-        candidates = await loop.run_in_executor(
-            None, search_index, question, self.law_index, 30
+        candidates, suggested_abbrevs = await asyncio.gather(
+            loop.run_in_executor(None, search_index, question, self.law_index, 30),
+            loop.run_in_executor(
+                None, self._suggest_abbreviations_from_knowledge, question
+            ),
         )
 
         if not candidates:
             candidates = self.law_index[:30]
+
+        # Merge Claude-suggested laws into candidates if not already present
+        abbrev_map = {law["abbreviation"].upper(): law for law in self.law_index}
+        existing = {c["abbreviation"].upper() for c in candidates}
+        for abbrev in suggested_abbrevs:
+            upper = abbrev.upper()
+            if upper not in existing:
+                law = abbrev_map.get(upper)
+                if law:
+                    candidates.append(law)
+                    existing.add(upper)
+        logger.info(
+            "candidates_merged",
+            keyword_hits=len(candidates) - len(suggested_abbrevs),
+            suggested=suggested_abbrevs,
+            total=len(candidates),
+        )
 
         yield sse(
             "status",
@@ -106,8 +148,8 @@ Keine weiteren Erklärungen."""
             # Fallback: use top 3 keyword candidates
             relevant_abbrevs = [c["abbreviation"] for c in candidates[:3]]
 
-        # Build lookup map
-        abbrev_map = {law["abbreviation"]: law for law in self.law_index}
+        # Case-insensitive lookup map (already built above, rebuild with original case)
+        abbrev_map = {law["abbreviation"].upper(): law for law in self.law_index}
 
         # Step 3: Fetch law contents
         law_contents = []
