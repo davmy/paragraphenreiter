@@ -23,6 +23,33 @@ def test_index_status_ready(client):
     assert data["law_count"] == 5  # SAMPLE_INDEX in conftest has 5 entries
 
 
+def test_chat_rejects_empty_message(client):
+    response = client.post("/api/chat", json={"message": "", "language": "de"})
+    assert response.status_code == 422
+
+
+def test_chat_rejects_message_too_long(client):
+    response = client.post("/api/chat", json={"message": "x" * 2001, "language": "de"})
+    assert response.status_code == 422
+
+
+def test_chat_rejects_invalid_language(client):
+    response = client.post("/api/chat", json={"message": "Frage", "language": "xx"})
+    assert response.status_code == 422
+
+
+def test_chat_rejects_invalid_role(client):
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "Frage",
+            "history": [{"role": "system", "content": "hack"}],
+            "language": "de",
+        },
+    )
+    assert response.status_code == 422
+
+
 def test_chat_streams_event_stream(client):
     async def fake_stream(question, history, language):
         yield f"data: {json.dumps({'type': 'content', 'content': 'Testantwort.'})}\n\n"

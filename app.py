@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from rag import ParagraphenreiterRAG
 
@@ -28,14 +28,16 @@ app = FastAPI(title="Paragraphenreiter", lifespan=lifespan)
 
 
 class ChatMessage(BaseModel):
-    role: str
-    content: str
+    role: str = Field(pattern=r"^(user|assistant)$")
+    content: str = Field(max_length=4000)
 
 
 class ChatRequest(BaseModel):
-    message: str
-    history: list[ChatMessage] = []
-    language: str = "de"
+    message: str = Field(min_length=1, max_length=2000)
+    history: list[ChatMessage] = Field(default=[], max_length=20)
+    language: str = Field(
+        default="de", pattern=r"^(de|en|tr|ar|ru|uk|pl|ro|fr|es|vi|zh)$"
+    )
 
 
 @app.post("/api/chat")
