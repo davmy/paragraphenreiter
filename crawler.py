@@ -43,14 +43,15 @@ def fetch_law_index(force_refresh: bool = False) -> list[dict]:
 
             # Each law entry: <a href="./path/index.html"><abbr title="Full Title">ABBREV</abbr></a>
             for a in soup.find_all("a", href=True):
-                href = a["href"]
+                href = str(a["href"])
                 if not re.search(r"/index\.html$", href):
                     continue
                 # Extract abbreviation and full title from <abbr> child
                 abbr_el = a.find("abbr")
                 if abbr_el:
                     abbrev = abbr_el.get_text(strip=True)
-                    title = abbr_el.get("title", abbrev)
+                    raw_title = abbr_el.get("title", abbrev)
+                    title = str(raw_title) if raw_title is not None else abbrev
                 else:
                     abbrev = a.get_text(strip=True)
                     title = abbrev
@@ -174,7 +175,7 @@ def fetch_law_content(abbreviation: str, url: str) -> dict:
         sections = []
         for a in soup.find_all("a", href=True):
             text = a.get_text(strip=True)
-            href = a["href"]
+            href = str(a["href"])
             if text and ("§" in text or "__" in href):
                 full_url = href if href.startswith("http") else urljoin(url, href)
                 sections.append({"text": text, "url": full_url})
