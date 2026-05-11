@@ -128,7 +128,7 @@ def search_index(query: str, law_index: list[dict], top_n: int = 30) -> list[dic
 
     scored = []
     for law in law_index:
-        score = 0
+        score = 0.0
         title_lower = law["title"].lower()
         abbrev = law["abbreviation"].upper()
 

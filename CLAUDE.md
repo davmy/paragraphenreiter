@@ -30,6 +30,7 @@ pytest tests/ -v
 ```bash
 black --check app.py rag.py crawler.py tests/
 ruff check app.py rag.py crawler.py tests/
+mypy app.py rag.py crawler.py
 ```
 
 **Auto-format:**

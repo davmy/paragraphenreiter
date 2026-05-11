@@ -1,7 +1,8 @@
 import json
 import asyncio
-from typing import AsyncGenerator
+from typing import AsyncGenerator, cast
 import anthropic
+from anthropic.types import MessageParam
 from crawler import fetch_law_index, fetch_law_content, search_index
 
 SYSTEM_PROMPT = """Du bist Paragraphenreiter – ein präziser Rechtsauskunfts-Assistent für deutsches Recht.
@@ -53,7 +54,8 @@ Keine weiteren Erklärungen."""
             max_tokens=200,
             messages=[{"role": "user", "content": prompt}],
         )
-        text = resp.content[0].text.strip()
+        block = resp.content[0]
+        text = (block.text if hasattr(block, "text") else "").strip()
         # Extract JSON list from response
         import re
 
@@ -174,7 +176,7 @@ Bitte beantworte die Frage mit konkreten Paragraphen-Verweisen und Links zu gese
             model="claude-sonnet-4-6",
             max_tokens=2000,
             system=SYSTEM_PROMPT,
-            messages=messages,
+            messages=cast(list[MessageParam], messages),
         ) as stream:
             for text in stream.text_stream:
                 full_answer += text
