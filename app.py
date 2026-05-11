@@ -65,6 +65,11 @@ async def chat(request: ChatRequest):
     )
 
 
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "index_ready": len(rag.law_index) > 0}
+
+
 @app.get("/api/config")
 async def config():
     return {"legal_notice_url": os.environ.get("LEGAL_NOTICE_URL") or None}

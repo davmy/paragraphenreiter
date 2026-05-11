@@ -2,6 +2,14 @@ import json
 from unittest.mock import patch
 
 
+def test_health(client):
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["index_ready"] is True
+
+
 def test_config_returns_null_when_unset(client):
     response = client.get("/api/config")
     assert response.status_code == 200
