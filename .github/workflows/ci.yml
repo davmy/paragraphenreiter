@@ -25,6 +25,9 @@ jobs:
       - name: Black check
         run: black --check app.py rag.py crawler.py tests/
 
+      - name: Ruff check
+        run: ruff check app.py rag.py crawler.py tests/
+
       - name: Tests
         run: pytest tests/ -v
         env:

@@ -28,7 +28,7 @@ class ParagraphenreiterRAG:
         print(f"[RAG] Gesetzesindex geladen: {len(self.law_index)} Gesetze")
 
     def _build_index_summary(self, candidates: list[dict]) -> str:
-        lines = [f"- {l['abbreviation']}: {l['title']}" for l in candidates]
+        lines = [f"- {law['abbreviation']}: {law['title']}" for law in candidates]
         return "\n".join(lines)
 
     def _identify_relevant_laws(
@@ -102,7 +102,7 @@ Keine weiteren Erklärungen."""
             relevant_abbrevs = [c["abbreviation"] for c in candidates[:3]]
 
         # Build lookup map
-        abbrev_map = {l["abbreviation"]: l for l in self.law_index}
+        abbrev_map = {law["abbreviation"]: law for law in self.law_index}
 
         # Step 3: Fetch law contents
         law_contents = []

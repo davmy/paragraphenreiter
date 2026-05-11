@@ -26,9 +26,10 @@ pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-**Lint (Black style check):**
+**Lint:**
 ```bash
 black --check app.py rag.py crawler.py tests/
+ruff check app.py rag.py crawler.py tests/
 ```
 
 **Auto-format:**
