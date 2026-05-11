@@ -23,7 +23,7 @@ class ParagraphenreiterRAG:
         self.law_index: list[dict] = []
 
     async def initialize(self):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         self.law_index = await loop.run_in_executor(None, fetch_law_index)
         print(f"[RAG] Gesetzesindex geladen: {len(self.law_index)} Gesetze")
 
@@ -74,7 +74,7 @@ Keine weiteren Erklärungen."""
         yield sse("status", {"content": "Durchsuche Gesetzesindex…"})
 
         # Step 1: keyword pre-filter
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         candidates = await loop.run_in_executor(
             None, search_index, question, self.law_index, 30
         )
