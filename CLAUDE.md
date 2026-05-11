@@ -14,8 +14,15 @@ This script creates the `.venv` if missing, installs dependencies, validates `AN
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements.lock  # exact versions used in CI/production
+pip install -r requirements-dev.txt
 uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Update lockfile** (after changing `requirements.txt`):
+```bash
+pip install -r requirements.txt
+pip freeze | grep -v "^-e" > requirements.lock
 ```
 
 **Environment:** Copy `.env.example` to `.env` and set `ANTHROPIC_API_KEY`. The optional `LEGAL_NOTICE_URL` adds an imprint link to the UI.

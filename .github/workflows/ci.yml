@@ -19,12 +19,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements.lock
           pip install -r requirements-dev.txt
           pip install pip-audit
 
       - name: Vulnerability scan
-        run: pip-audit -r requirements.txt
+        run: pip-audit -r requirements.lock
 
       - name: Black check
         run: black --check app.py rag.py crawler.py logging_config.py tests/
