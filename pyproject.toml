@@ -1,3 +1,13 @@
+[tool.pytest.ini_options]
+addopts = "--cov=. --cov-report=term-missing --cov-fail-under=50"
+cov_source = ["."]
+
+[tool.coverage.run]
+omit = ["tests/*", ".venv/*"]
+
+[tool.coverage.report]
+exclude_lines = ["if __name__ == .__main__.:"]
+
 [tool.black]
 line-length = 88
 target-version = ["py312"]
