@@ -95,7 +95,9 @@ def test_stream_answer_yields_content_and_done():
     }
 
     with (
-        patch.object(rag, "_suggest_abbreviations_from_knowledge", return_value=["BGB"]),
+        patch.object(
+            rag, "_suggest_abbreviations_from_knowledge", return_value=["BGB"]
+        ),
         patch("rag.search_index", return_value=SAMPLE_INDEX),
         patch("rag.fetch_law_content", return_value=fake_law),
     ):

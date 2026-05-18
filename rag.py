@@ -37,7 +37,9 @@ class ParagraphenreiterRAG:
     ) -> list[dict]:
         """Return all sections whose titles match any question keyword, sorted by score."""
         tokens = set(re.findall(r"\w{3,}", question.lower()))
-        scored = [(sum(1 for t in tokens if t in s["text"].lower()), s) for s in sections]
+        scored = [
+            (sum(1 for t in tokens if t in s["text"].lower()), s) for s in sections
+        ]
         scored.sort(key=lambda x: -x[0])
         relevant = [s for score, s in scored if score > 0]
         return relevant if relevant else sections[:top_n]
@@ -108,9 +110,7 @@ Keine weiteren Erklärungen."""
                 seen.add(upper)
 
         if not relevant_laws:
-            relevant_laws = keyword_candidates[:5] or [
-                l for l in self.law_index[:5]
-            ]
+            relevant_laws = keyword_candidates[:5] or [l for l in self.law_index[:5]]
 
         logger.info(
             "laws_selected",
@@ -123,7 +123,9 @@ Keine weiteren Erklärungen."""
         sources = []
         for law_meta in relevant_laws:
             abbrev = law_meta["abbreviation"]
-            yield sse("status", {"content": f"Lade {abbrev} von gesetze-im-internet.de…"})
+            yield sse(
+                "status", {"content": f"Lade {abbrev} von gesetze-im-internet.de…"}
+            )
             content = await loop.run_in_executor(
                 None, fetch_law_content, abbrev, law_meta["url"]
             )
@@ -152,13 +154,15 @@ Keine weiteren Erklärungen."""
                     law_context += f"  {s['text']}: {s['url']}\n"
             content_slice = lc["content"][:4000]
             law_context += content_slice
-            debug_laws.append({
-                "abbreviation": lc["abbreviation"],
-                "title": lc["title"],
-                "url": lc["url"],
-                "sections_used": len(sections),
-                "content_chars": len(content_slice),
-            })
+            debug_laws.append(
+                {
+                    "abbreviation": lc["abbreviation"],
+                    "title": lc["title"],
+                    "url": lc["url"],
+                    "sections_used": len(sections),
+                    "content_chars": len(content_slice),
+                }
+            )
 
         logger.debug("context_laws", laws=debug_laws)
         yield sse("debug", {"laws": debug_laws})
