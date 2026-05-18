@@ -45,10 +45,25 @@ SAMPLE_INDEX = [
 ]
 
 
+FAKE_LAW_CONTENT = {
+    "abbreviation": "BGB",
+    "title": "Bürgerliches Gesetzbuch",
+    "url": "https://www.gesetze-im-internet.de/bgb/",
+    "sections": [
+        {"text": "§ 433", "url": "https://www.gesetze-im-internet.de/bgb/__433.html"}
+    ],
+    "content": "Testinhalt",
+}
+
+
 @pytest.fixture(scope="session")
 def client():
-    # Prevent lifespan from hitting the network
-    with patch("rag.fetch_law_index", return_value=SAMPLE_INDEX):
+    # Prevent lifespan and request handlers from hitting the network
+    with (
+        patch("rag.fetch_law_index", return_value=SAMPLE_INDEX),
+        patch("rag.fetch_law_content", return_value=FAKE_LAW_CONTENT),
+        patch("rag.search_index", return_value=SAMPLE_INDEX[:2]),
+    ):
         from app import app
 
         with TestClient(app) as c:
