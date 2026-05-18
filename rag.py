@@ -33,13 +33,13 @@ class ParagraphenreiterRAG:
         logger.info("index_loaded", law_count=len(self.law_index))
 
     def _filter_sections(
-        self, sections: list[dict], question: str, top_n: int = 20
+        self, sections: list[dict], question: str, top_n: int = 30
     ) -> list[dict]:
-        """Return the sections whose titles best match the question keywords."""
+        """Return all sections whose titles match any question keyword, sorted by score."""
         tokens = set(re.findall(r"\w{3,}", question.lower()))
         scored = [(sum(1 for t in tokens if t in s["text"].lower()), s) for s in sections]
         scored.sort(key=lambda x: -x[0])
-        relevant = [s for score, s in scored if score > 0][:top_n]
+        relevant = [s for score, s in scored if score > 0]
         return relevant if relevant else sections[:top_n]
 
     def _suggest_abbreviations_from_knowledge(self, question: str) -> list[str]:
@@ -141,6 +141,7 @@ Keine weiteren Erklärungen."""
 
         # Step 3: Build context for Claude
         law_context = ""
+        debug_laws = []
         for lc in law_contents:
             law_context += f"\n\n=== {lc['abbreviation']} – {lc['title']} ===\n"
             law_context += f"URL: {lc['url']}\n"
@@ -149,7 +150,18 @@ Keine weiteren Erklärungen."""
                 law_context += "Paragraph-URLs:\n"
                 for s in sections:
                     law_context += f"  {s['text']}: {s['url']}\n"
-            law_context += lc["content"][:4000]
+            content_slice = lc["content"][:4000]
+            law_context += content_slice
+            debug_laws.append({
+                "abbreviation": lc["abbreviation"],
+                "title": lc["title"],
+                "url": lc["url"],
+                "sections_used": len(sections),
+                "content_chars": len(content_slice),
+            })
+
+        logger.debug("context_laws", laws=debug_laws)
+        yield sse("debug", {"laws": debug_laws})
 
         messages = []
         for h in history[-6:]:  # Last 3 turns

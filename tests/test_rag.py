@@ -26,33 +26,36 @@ def make_text_block(text: str) -> MagicMock:
     return block
 
 
-# ── _identify_relevant_laws ──────────────────────────────
+# ── _suggest_abbreviations_from_knowledge ───────────────
 
 
-def test_identify_relevant_laws_empty_candidates():
-    assert make_rag()._identify_relevant_laws("Frage", []) == []
-
-
-def test_identify_relevant_laws_parses_json_response():
+def test_suggest_abbreviations_parses_json_response():
     rag = make_rag()
     rag.client.messages.create.return_value.content = [make_text_block('["BGB"]')]
-    result = rag._identify_relevant_laws("Kaufvertrag", SAMPLE_INDEX)
+    result = rag._suggest_abbreviations_from_knowledge("Kaufvertrag")
     assert result == ["BGB"]
 
 
-def test_identify_relevant_laws_falls_back_on_no_json():
+def test_suggest_abbreviations_falls_back_on_no_json():
     rag = make_rag()
     rag.client.messages.create.return_value.content = [make_text_block("keine Liste")]
-    result = rag._identify_relevant_laws("Frage", SAMPLE_INDEX)
+    result = rag._suggest_abbreviations_from_knowledge("Frage")
     assert result == []
 
 
-def test_identify_relevant_laws_falls_back_on_invalid_json():
+def test_suggest_abbreviations_falls_back_on_invalid_json():
     rag = make_rag()
     rag.client.messages.create.return_value.content = [
         make_text_block("[not valid json}")
     ]
-    result = rag._identify_relevant_laws("Frage", SAMPLE_INDEX)
+    result = rag._suggest_abbreviations_from_knowledge("Frage")
+    assert result == []
+
+
+def test_suggest_abbreviations_returns_empty_on_api_error():
+    rag = make_rag()
+    rag.client.messages.create.side_effect = Exception("API error")
+    result = rag._suggest_abbreviations_from_knowledge("Frage")
     assert result == []
 
 
@@ -92,7 +95,8 @@ def test_stream_answer_yields_content_and_done():
     }
 
     with (
-        patch.object(rag, "_identify_relevant_laws", return_value=["BGB"]),
+        patch.object(rag, "_suggest_abbreviations_from_knowledge", return_value=["BGB"]),
+        patch("rag.search_index", return_value=SAMPLE_INDEX),
         patch("rag.fetch_law_content", return_value=fake_law),
     ):
         rag.client.messages.stream.return_value = _make_mock_stream(["Antwort."])
@@ -120,7 +124,8 @@ def test_stream_answer_uses_fallback_when_no_relevant_laws():
     }
 
     with (
-        patch.object(rag, "_identify_relevant_laws", return_value=[]),
+        patch.object(rag, "_suggest_abbreviations_from_knowledge", return_value=[]),
+        patch("rag.search_index", return_value=[]),
         patch("rag.fetch_law_content", return_value=fake_law),
     ):
         rag.client.messages.stream.return_value = _make_mock_stream(["Fallback."])

@@ -182,7 +182,7 @@ def fetch_law_content(abbreviation: str, url: str) -> dict:
 
         # Extract readable law text (first ~8000 chars to stay within limits)
         content = ""
-        for selector in ["div.jnnorm", "div#content", "main", "article"]:
+        for selector in ["div.jnnorm", "div#content", "main", "article", "body"]:
             el = soup.select_one(selector)
             if el:
                 content = el.get_text(separator="\n", strip=True)

@@ -374,6 +374,54 @@ header img.logo {
   #lang-select option { background: #1f2937; }
 }
 
+/* ── Debug panel ─────────────────────────────────────── */
+.debug-panel {
+  font-family: monospace;
+  font-size: 0.72rem;
+  background: #1a1a2e;
+  color: #a0c4ff;
+  border: 1px solid #3a3a6e;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.debug-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #ffd54f;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.debug-panel .debug-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.debug-panel .debug-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.debug-panel .debug-abbr {
+  color: #ffd54f;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.debug-panel .debug-meta {
+  color: #6a7fa8;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+.debug-panel a { color: #80cbc4; text-decoration: none; }
+.debug-panel a:hover { text-decoration: underline; }
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 600px) {
   header { padding: 10px 14px; }
