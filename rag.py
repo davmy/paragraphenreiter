@@ -110,12 +110,12 @@ Keine weiteren Erklärungen."""
                 seen.add(upper)
 
         if not relevant_laws:
-            relevant_laws = keyword_candidates[:5] or [l for l in self.law_index[:5]]
+            relevant_laws = keyword_candidates[:5] or list(self.law_index[:5])
 
         logger.info(
             "laws_selected",
             suggested=suggested_abbrevs,
-            final=[l["abbreviation"] for l in relevant_laws],
+            final=[law["abbreviation"] for law in relevant_laws],
         )
 
         # Step 2: Fetch law contents
