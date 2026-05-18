@@ -16,6 +16,7 @@ SAMPLE_INDEX = [
 
 def make_rag() -> ParagraphenreiterRAG:
     rag = ParagraphenreiterRAG()
+    rag.client = MagicMock()
     rag.law_index = SAMPLE_INDEX
     return rag
 
