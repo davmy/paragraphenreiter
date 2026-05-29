@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+import anthropic
 import structlog
 from logging_config import configure_logging
 from rag import ParagraphenreiterRAG
@@ -75,11 +76,16 @@ async def chat(request: Request, body: ChatRequest):
             async for chunk in rag.stream_answer(body.message, history, body.language):
                 yield chunk
             log.info("chat_complete")
+        except anthropic.APIStatusError as e:
+            import json
+
+            log.error("chat_api_error", status_code=e.status_code, error=str(e))
+            yield f"data: {json.dumps({'type': 'error', 'content': 'Der KI-Dienst ist vorübergehend nicht verfügbar. Bitte versuche es später erneut.'})}\n\n"
         except Exception as e:
             import json
 
             log.error("chat_error", error=str(e))
-            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'content': 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es später erneut.'})}\n\n"
 
     return StreamingResponse(
         event_generator(),
